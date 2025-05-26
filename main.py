@@ -2,9 +2,9 @@ import time
 import yaml
 from pathlib import Path
 from twilio.rest import Client
-from secrets_config import ACCOUNT_SID, AUTH_TOKEN, TWILIO_NUMBER, TARGET_NUMBER
+from secrets_config import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_NUMBER, TARGET_NUMBER
 
-client = Client(ACCOUNT_SID, AUTH_TOKEN)
+client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 call_config_path = Path(__file__).parent / "call_config.yaml"
 
@@ -16,7 +16,7 @@ def place_call():
     call = client.calls.create(
         to=TARGET_NUMBER,
         from_=TWILIO_NUMBER,
-        url=f"https://{call_config['base_url']}/voice/menu.xml"
+        url=f"https://{call_config['web_host']}/voice/menu.xml"
     )
     print(f"Placed call: {call.sid}")
 

@@ -14,10 +14,10 @@ def convert_m4a_to_wav(m4a_path, wav_path):
    subprocess.run([
     "ffmpeg", "-y",
     "-i", str(m4a_path),
-    "-f", "wav",                 # ✅ force WAV container
-    "-acodec", "pcm_s16le",      # 16-bit PCM
-    "-ar", "44100",              # sample rate
-    "-ac", "1",                  # mono
+    "-f", "wav",                 
+    "-acodec", "pcm_s16le",      
+    "-ar", "44100",             
+    "-ac", "1",                  
     str(wav_path)
 ], check=True)
 

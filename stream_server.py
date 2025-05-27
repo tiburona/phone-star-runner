@@ -2,6 +2,7 @@ import asyncio
 import base64
 import websockets
 import pyaudio
+import audioop
 
 CHANNELS = 1
 SAMPLE_WIDTH = 1
@@ -30,8 +31,9 @@ async def handle_stream(websocket):
 
             if data.get("event") == "media":
                 payload = data["media"]["payload"]
-                raw_audio = base64.b64decode(payload)
-                stream.write(raw_audio)
+                mulaw_audio = base64.b64decode(payload)
+                pcm_audio = audioop.ulaw2lin(mulaw_audio, 2)  
+                stream.write(pcm_audio)
             elif data.get("event") == "stop":
                 print("Stream ended.")
                 break

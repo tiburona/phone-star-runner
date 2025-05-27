@@ -14,8 +14,6 @@ steps:
 - digit: '1'
   pause: 18
 - digit: '1'
-  pause: 3
-- digits: __SENSITIVE__2
   pause: 8
 - digits: __SENSITIVE__4
   pause: 4

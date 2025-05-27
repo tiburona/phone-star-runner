@@ -1,20 +1,16 @@
-from flask import Flask, Response, request
+from flask import Flask, Response, request, send_from_directory
 import yaml
 import os
 from pathlib import Path
 import xml.etree.ElementTree as ET
 from step_key import secrets, audio_recordings
 from start_ngrok import get_ngrok_url
+from secrets_config import secrets_dict
 
 app = Flask(__name__)
 
-CONFIG_PATH = Path(__file__).parent / "call_config.yaml"
-STEP_CONFIG_PATH = Path(__file__).parent / "generated_call_config.yaml"
-
-
-
-with open(CONFIG_PATH, "r") as f:
-    call_config = yaml.safe_load(f)
+STEP_CONFIG_PATH = Path(__file__).parent / "generated_step_config.yaml"
+AUDIO_DIR = Path(__file__).parent / "audio"
 
 @app.before_request
 def log_request():
@@ -28,55 +24,60 @@ def index():
 def health():
     return "OK", 200
 
-# @app.route("/voice/menu.xml")
-# def menu():
-#     wss_url = get_ngrok_url('wss')
-#     with open(STEP_CONFIG_PATH, "r") as f:
-#         steps_config = yaml.safe_load(f)
-
-#     steps = steps_config.get("steps", [])
-
-#     response_el = ET.Element("Response")
-
-#     start_el = ET.SubElement(response_el, "Start")
-
-#     print(f"Use this stream URL: {wss_url}")
-#     ET.SubElement(start_el, "Stream", url=wss_url)
-
-#     secret_counter = 0
-#     audio_counter = 0
-
-#     for step in steps:
-#         pause = str(step["pause"])
-
-#         if "digits" in step:
-#             secret_value = os.environ[secrets[secret_counter]]
-#             secret_counter += 1
-#             ET.SubElement(response_el, "Pause", length=pause)
-#             ET.SubElement(response_el, "Play", digits=secret_value)
-
-#         elif "digit" in step:
-#             ET.SubElement(response_el, "Pause", length=pause)
-#             ET.SubElement(response_el, "Play", digits=step["digit"])
-
-#         elif "play_audio" in step:
-#             audio_route = f"{call_config['web_host']}/audio/{audio_recordings[audio_counter]}"
-#             audio_counter += 1
-#             ET.SubElement(response_el, "Play").text = audio_route
-
-#     # redirect_el = ET.SubElement(response_el, "Redirect")
-#     # redirect_el.text = "/voice/connect.xml"
-
-#     xml_str = ET.tostring(response_el, encoding="utf-8", method="xml")
-#     return Response(xml_str, mimetype='text/xml')
+@app.route("/audio/<filename>")
+def serve_audio(filename):
+    return send_from_directory(AUDIO_DIR, filename)
 
 @app.route("/voice/menu.xml", methods=["GET", "POST"])
 def menu():
-    print("🚨 /voice/menu.xml was hit!")
+    wss_url = get_ngrok_url('wss')
+    http_url = get_ngrok_url('http')
+    with open(STEP_CONFIG_PATH, "r") as f:
+        steps_config = yaml.safe_load(f)
+
+    steps = steps_config.get("steps", [])
+
     response_el = ET.Element("Response")
-    ET.SubElement(response_el, "Say").text = "Hello. Testing menu response."
+
+    start_el = ET.SubElement(response_el, "Start")
+
+    print(f"Use this stream URL: {wss_url}")
+    ET.SubElement(start_el, "Stream", url=wss_url)
+
+    secret_counter = 0
+    audio_counter = 0
+
+    for step in steps:
+        pause = str(step["pause"])
+
+        if "digits" in step:
+            secret_value = secrets_dict[secrets[secret_counter]]
+            secret_counter += 1
+            ET.SubElement(response_el, "Pause", length=pause)
+            ET.SubElement(response_el, "Play", digits=secret_value)
+
+        elif "digit" in step:
+            ET.SubElement(response_el, "Pause", length=pause)
+            ET.SubElement(response_el, "Play", digits=step["digit"])
+
+        elif "play_audio" in step:
+            audio_route = f"{http_url}/audio/{audio_recordings[audio_counter]}"
+            audio_counter += 1
+            ET.SubElement(response_el, "Play").text = audio_route
+
+    # redirect_el = ET.SubElement(response_el, "Redirect")
+    # redirect_el.text = "/voice/connect.xml"
+
     xml_str = ET.tostring(response_el, encoding="utf-8", method="xml")
     return Response(xml_str, mimetype='text/xml')
+
+# @app.route("/voice/menu.xml", methods=["GET", "POST"])
+# def menu():
+#     print("🚨 /voice/menu.xml was hit!")
+#     response_el = ET.Element("Response")
+#     ET.SubElement(response_el, "Say").text = "Hello. Testing menu response."
+#     xml_str = ET.tostring(response_el, encoding="utf-8", method="xml")
+#     return Response(xml_str, mimetype='text/xml')
 
 @app.route("/voice/connect.xml")
 def connect():

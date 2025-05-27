@@ -57,6 +57,7 @@ def group_and_write_yaml(keypress_log):
     grouped_steps = []
     buffer = []
     buffer_start = None
+    
     last_ts = None
 
     def append_grouped_chars():

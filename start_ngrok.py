@@ -53,8 +53,9 @@ def get_ngrok_session():
 
 def get_ngrok_url(protocol='http'):
     tunnels = get_ngrok_session()
+    port = "5050" if protocol == 'http' else "8765"
     for t in tunnels:
-        if t["proto"] == "https" and "5050" in str(t["config"]["addr"]):
+        if t["config"]["addr"].endswith(f":{port}"):
             return t["public_url"] if protocol == 'http' else t["public_url"].replace("https", "wss")
-    raise RuntimeError("❌ Couldn't find HTTPS tunnel for Flask (port 5050)")
+    raise RuntimeError(f"❌ Couldn't find HTTPS tunnel for(port {port})")
    

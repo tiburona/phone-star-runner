@@ -1,0 +1,21 @@
+steps:
+- digit: '1'
+  pause: 0
+- digit: '2'
+  pause: 11
+- digit: '4'
+  pause: 25
+- pause: 24
+  play_audio: __AUDIO__
+- pause: 21
+  play_audio: __AUDIO__
+- digits: __SENSITIVE__9
+  pause: 31
+- digit: '1'
+  pause: 18
+- digit: '1'
+  pause: 3
+- digits: __SENSITIVE__2
+  pause: 8
+- digits: __SENSITIVE__4
+  pause: 4

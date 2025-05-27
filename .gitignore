@@ -6,3 +6,5 @@ __pycache__/
 __pycache__/
 audio/*.mp3
 .DS_Store
+ngrok.yml
+scratch*

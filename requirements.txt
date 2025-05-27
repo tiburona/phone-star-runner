@@ -2,3 +2,5 @@ flask
 twilio
 python-dotenv
 pyyaml
+simpleaudio
+pynput

@@ -1,0 +1,10 @@
+fly.toml
+.git/
+__pycache__/
+.envrc
+.venv/
+.env
+.env/
+ngrok.yml
+.DS_Store
+scratch*

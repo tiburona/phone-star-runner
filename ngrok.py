@@ -4,7 +4,7 @@ import time
 from pathlib import Path
 import sys
 
-from secrets_config import NGROK_AUTH_TOKEN
+from config.secrets_config import NGROK_AUTH_TOKEN
 
 
 def write_config():

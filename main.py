@@ -6,9 +6,9 @@ import sys
 from pathlib import Path
 from twilio.rest import Client
 import asyncio
-from secrets_config import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_NUMBER, TARGET_NUMBER
+from config.secrets_config import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_NUMBER, TARGET_NUMBER
 from app import app
-from start_ngrok import get_ngrok_url
+from ngrok import get_ngrok_url
 from stream_server import streaming_server
 
 

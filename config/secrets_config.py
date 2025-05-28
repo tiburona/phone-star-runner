@@ -18,7 +18,7 @@ TARGET_NUMBER = get_env_var("TARGET_NUMBER")
 FORWARDING_NUMBER = get_env_var("FORWARDING_NUMBER")
 NGROK_AUTH_TOKEN = get_env_var("NGROK_AUTH_TOKEN")
 
-secrets_dict = {
+SECRETS_DICT = {
     'ID_NUMBER': ID_NUMBER,
     'PIN': PIN
 }

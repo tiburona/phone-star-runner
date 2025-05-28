@@ -1,5 +1,0 @@
-<Response>
-  <Dial timeout="20">
-    <Number>+1YOUR_PHONE_NUMBER</Number>
-  </Dial>
-</Response>

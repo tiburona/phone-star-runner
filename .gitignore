@@ -1,10 +1,12 @@
 *.log
 .env
+**/.env
 env/
 venv/
 __pycache__/
 __pycache__/
-audio/*.mp3
+audio/*
 .DS_Store
 ngrok.yml
+**/ngrok.yml
 scratch*

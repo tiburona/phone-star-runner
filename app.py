@@ -3,14 +3,15 @@ import yaml
 import os
 from pathlib import Path
 import xml.etree.ElementTree as ET
-from step_key import secrets, audio_recordings
-from start_ngrok import get_ngrok_url
-from secrets_config import secrets_dict
+from ngrok import get_ngrok_url
+from config.secrets_config import SECRETS_DICT
+from config.public_config import SECRET_STEPS, AUDIO_RECORDINGS, DIAL_TIMEOUT, STEP_CONFIG_FNAME
 
 app = Flask(__name__)
 
-STEP_CONFIG_PATH = Path(__file__).parent / "generated_step_config.yaml"
+STEP_CONFIG_PATH = Path(__file__).parent / "config" / STEP_CONFIG_FNAME
 AUDIO_DIR = Path(__file__).parent / "audio"
+
 
 @app.before_request
 def log_request():
@@ -51,7 +52,7 @@ def menu():
         pause = str(step["pause"])
 
         if "digits" in step:
-            secret_value = secrets_dict[secrets[secret_counter]]
+            secret_value = SECRETS_DICT[SECRET_STEPS[secret_counter]]
             secret_counter += 1
             ET.SubElement(response_el, "Pause", length=pause)
             ET.SubElement(response_el, "Play", digits=secret_value)
@@ -61,30 +62,21 @@ def menu():
             ET.SubElement(response_el, "Play", digits=step["digit"])
 
         elif "play_audio" in step:
-            audio_route = f"{http_url}/audio/{audio_recordings[audio_counter]}"
+            audio_route = f"{http_url}/audio/{AUDIO_RECORDINGS[audio_counter]}"
             audio_counter += 1
             ET.SubElement(response_el, "Play").text = audio_route
 
-    # redirect_el = ET.SubElement(response_el, "Redirect")
-    # redirect_el.text = "/voice/connect.xml"
+    redirect_el = ET.SubElement(response_el, "Redirect")
+    redirect_el.text = "/voice/connect.xml"
 
     xml_str = ET.tostring(response_el, encoding="utf-8", method="xml")
     return Response(xml_str, mimetype='text/xml')
 
-# @app.route("/voice/menu.xml", methods=["GET", "POST"])
-# def menu():
-#     print("🚨 /voice/menu.xml was hit!")
-#     response_el = ET.Element("Response")
-#     ET.SubElement(response_el, "Say").text = "Hello. Testing menu response."
-#     xml_str = ET.tostring(response_el, encoding="utf-8", method="xml")
-#     return Response(xml_str, mimetype='text/xml')
-
 @app.route("/voice/connect.xml")
 def connect():
     forwarding_number = os.get_env['FORWARDING_NUMBER']
-    dial_timeout = call_config.get("dial_timeout", 30)
 
     response_el = ET.Element("Response")
     ET.SubElement(
-        response_el, "Dial", timeout=str(dial_timeout)).text = forwarding_number
+        response_el, "Dial", timeout=str(DIAL_TIMEOUT)).text = forwarding_number
     return Response(ET.tostring(response_el), mimetype="text/xml")

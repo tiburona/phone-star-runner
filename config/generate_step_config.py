@@ -3,11 +3,14 @@ import time
 import yaml
 import threading
 import simpleaudio as sa
+
 from pynput import keyboard
 import subprocess
 import sys
 
-audio_path = Path("/Users/katie/Downloads/DOL_call.m4a")
+from public_config import ORIG_AUDIO_PATH, STEP_CONFIG_FNAME
+
+audio_path = Path(ORIG_AUDIO_PATH)
 
 # for this to work you need ffmpeg installed
 def convert_m4a_to_wav(m4a_path, wav_path):
@@ -46,7 +49,9 @@ def play_audio():
         wave_obj = sa.WaveObject.from_wave_file(str(audio_path))
         play_obj = wave_obj.play()
         play_obj.wait_done()
+        print("Audio finished, setting done event")
         done.set()
+        print("Audio thread completed")
     except Exception as e:
         print(f"Audio playback failed: {e}")
 
@@ -54,6 +59,7 @@ def group_and_write_yaml(keypress_log):
     grouped_steps = []
     buffer = []
     buffer_start = None
+
     last_ts = None
 
     def append_grouped_chars():
@@ -92,7 +98,7 @@ def group_and_write_yaml(keypress_log):
 
         steps.append(entry)
 
-    output_path = Path("generated_call_config.yaml")
+    output_path = Path(STEP_CONFIG_FNAME)
 
     with open(output_path, "w") as f:
         yaml.dump({'steps': steps}, f)
@@ -100,21 +106,35 @@ def group_and_write_yaml(keypress_log):
     print(f"YAML written to {output_path.name}")
     
     return output_path, steps
-    
+
+print("The recording will start playing.")
+print("When you hear the first sound, press Enter to begin logging keypresses.")
+
+time.sleep(3)
+
+threading.Thread(target=play_audio, daemon=True).start()
+
+input("Press Enter when the voice menu begins...")
 start_time = time.time()
-threading.Thread(target=play_audio).start()
 
 listener = keyboard.Listener(on_press=on_press)
 listener.start()
 
-try:
-    while not done.is_set():
-        time.sleep(.1)
-except KeyboardInterrupt:
-    print("Ctrl+C detected — exiting.")
-    listener.stop()
-    listener.join()
-    sys.exit(0)
+def stop_listener_when_done():
+    done.wait()
+    try:
+        listener.stop()
+        print("Listener stop called")
+    except Exception as e:
+        print(f"Error during stop: {e}")
+
+stop_thread = threading.Thread(target=stop_listener_when_done)
+stop_thread.start()
+
+listener.join()
+print("listener exited")
+print(keypress_log)
+
 
 group_and_write_yaml(keypress_log)
 

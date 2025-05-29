@@ -6,7 +6,6 @@ import simpleaudio as sa
 
 from pynput import keyboard
 import subprocess
-import sys
 
 from public_config import ORIG_AUDIO_PATH, STEP_CONFIG_FNAME
 
@@ -50,13 +49,14 @@ def on_press(key):
     if start_time is None:
         if key == keyboard.Key.enter or getattr(key, "char", None) in ("\r", "\n"):
             start_time = time.time()
+            keypress_log.append(('Enter', start_time))
             print(">>> Enter received, logging started")
         # Ignore all other keys until the start marker
         return
 
     # 2) After start_time is set, record any printable character keys
     if hasattr(key, "char") and key.char is not None:
-        t = round(time.time() - start_time, 2)
+        t = round(time.time(), 2)
         keypress_log.append((key.char, t))
         print(f"Logged: {key.char} at {t}s")
 
@@ -65,7 +65,7 @@ def play_audio():
         wave_obj = sa.WaveObject.from_wave_file(str(audio_path))
         play_obj = wave_obj.play()
         play_obj.wait_done()
-        print("Audio finished, setting done event")
+        print("\nAudio finished, setting done event")
         done.set()
         print("Audio thread completed")
     except Exception as e:
@@ -79,7 +79,7 @@ def group_and_write_yaml(keypress_log):
     last_ts = None
 
     def append_grouped_chars():
-        t = buffer_start if len(grouped_steps) == 0 else grouped_steps[-1]['time']
+        t = start if len(grouped_steps) == 0 else grouped_steps[-1]['time']
             
         pause = round(buffer_start - t)
         grouped_steps.append({
@@ -88,13 +88,17 @@ def group_and_write_yaml(keypress_log):
             'time': buffer_start
         })
 
-    for char, ts in keypress_log:
-        if last_ts is None or ts - last_ts <= 2:
+    start = keypress_log[0][1]
+
+    for char, ts in keypress_log[1:]:       
+            
+        if buffer_start is None or ts - last_ts <= 2:
             if buffer_start is None:
                 buffer_start = ts
             buffer.append(char)
         else:
-            append_grouped_chars()
+            if buffer:
+                append_grouped_chars()
             buffer = [char]
             buffer_start = ts
         last_ts = ts
@@ -114,7 +118,8 @@ def group_and_write_yaml(keypress_log):
 
         steps.append(entry)
 
-    output_path = Path(STEP_CONFIG_FNAME)
+    script_dir = Path(__file__).resolve().parent   # folder that contains this script
+    output_path = script_dir / STEP_CONFIG_FNAME    
 
     with open(output_path, "w") as f:
         yaml.dump({'steps': steps}, f)
@@ -131,7 +136,7 @@ listener.start()
 
 threading.Thread(target=play_audio, daemon=True).start()
 
-done.wait()                            # wait for audio to finish
+done.wait()                            
 listener.stop()
 listener.join(timeout=0.5)
 

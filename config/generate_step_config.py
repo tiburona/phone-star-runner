@@ -12,6 +12,8 @@ from public_config import ORIG_AUDIO_PATH, STEP_CONFIG_FNAME
 
 audio_path = Path(ORIG_AUDIO_PATH)
 
+done = threading.Event()
+
 # for this to work you need ffmpeg installed
 def convert_m4a_to_wav(m4a_path, wav_path):
    subprocess.run([
@@ -31,18 +33,32 @@ if audio_path.suffix == '.m4a':
     audio_path = wave_path
 
 keypress_log = []
-done = threading.Event()
+# Will be set when the user presses Enter
+start_time = None
+
 
 def on_press(key):
+    """
+    First Enter press marks the start of the IVR; subsequent digit keys are logged
+    relative to that moment.
+    """
+    global start_time
     if done.is_set():
         return False
-    try: 
-        if hasattr(key, 'char'):
-            t = round(time.time() - start_time, 2)
-            keypress_log.append((key.char, t))
-            print(f"Logged: {key.char} at {t}s")
-    except AttributeError:
-        pass
+
+    # 1) First Enter -> set the reference time
+    if start_time is None:
+        if key == keyboard.Key.enter or getattr(key, "char", None) in ("\r", "\n"):
+            start_time = time.time()
+            print(">>> Enter received, logging started")
+        # Ignore all other keys until the start marker
+        return
+
+    # 2) After start_time is set, record any printable character keys
+    if hasattr(key, "char") and key.char is not None:
+        t = round(time.time() - start_time, 2)
+        keypress_log.append((key.char, t))
+        print(f"Logged: {key.char} at {t}s")
 
 def play_audio():
     try:
@@ -108,38 +124,15 @@ def group_and_write_yaml(keypress_log):
     return output_path, steps
 
 print("The recording will start playing.")
-print("When you hear the first sound, press Enter to begin logging keypresses.")
-
-time.sleep(3)
-
-threading.Thread(target=play_audio, daemon=True).start()
-
-input("Press Enter when the voice menu begins...")
-start_time = time.time()
+print("Press Enter as soon as you hear sound on the recording; your key pressed will be logged after that.")
 
 listener = keyboard.Listener(on_press=on_press)
 listener.start()
 
-def stop_listener_when_done():
-    done.wait()
-    try:
-        listener.stop()
-        print("Listener stop called")
-    except Exception as e:
-        print(f"Error during stop: {e}")
+threading.Thread(target=play_audio, daemon=True).start()
 
-stop_thread = threading.Thread(target=stop_listener_when_done)
-stop_thread.start()
-
-listener.join()
-print("listener exited")
-print(keypress_log)
-
+done.wait()                            # wait for audio to finish
+listener.stop()
+listener.join(timeout=0.5)
 
 group_and_write_yaml(keypress_log)
-
-
-
-
-
-

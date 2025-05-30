@@ -22,7 +22,7 @@ tunnels:
 
 def start_ngrok():
     subprocess.Popen(["ngrok", "start", "--all", "--config=ngrok.yml"])
-    time.sleep(2)
+    time.sleep(3)
     return requests.get("http://localhost:4040/api/tunnels").json()['tunnels']
 
 def needs_restart(tunnels):

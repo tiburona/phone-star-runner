@@ -72,9 +72,9 @@ def menu():
     xml_str = ET.tostring(response_el, encoding="utf-8", method="xml")
     return Response(xml_str, mimetype='text/xml')
 
-@app.route("/voice/connect.xml")
+@app.route("/voice/connect.xml", methods=["GET", "POST"])
 def connect():
-    forwarding_number = os.get_env['FORWARDING_NUMBER']
+    forwarding_number = SECRETS_DICT['FORWARDING_NUMBER']
 
     response_el = ET.Element("Response")
     ET.SubElement(

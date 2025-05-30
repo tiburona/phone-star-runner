@@ -1,13 +1,3 @@
 steps:
-- digit: '2'
-  pause: 6
-- digit: '6'
-  pause: 3
-- digits: __SENSITIVE__2
-  pause: 3
-- digits: __SENSITIVE__3
-  pause: 5
-- pause: 3
-  play_audio: __AUDIO__
-- pause: 4
-  play_audio: __AUDIO__
+- digit: '3'
+  pause: 15

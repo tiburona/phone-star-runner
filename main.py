@@ -1,23 +1,18 @@
 import time
-import yaml
 import threading
 import requests
 import sys
-from pathlib import Path
 from twilio.rest import Client
 import asyncio
+from config.public_config import RETRY_INTERVAL
 from config.secrets_config import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_NUMBER, TARGET_NUMBER
 from app import app
 from ngrok import get_ngrok_url
 from stream_server import streaming_server
 
 
+
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-
-call_config_path = Path(__file__).parent / "call_config.yaml"
-
-with open(call_config_path, "r") as f:
-    call_config = yaml.safe_load(f)
 
 
 def place_call(ngrok_url):
@@ -29,10 +24,10 @@ def place_call(ngrok_url):
     print(f"Placed call: {call.sid}")
 
 def run_loop(ngrok_url):
-    with open(call_config_path, "r") as f:
-        while True:
-            place_call(ngrok_url)
-            time.sleep(call_config.get("retry_interval", 300))  
+    
+    while True:
+        place_call(ngrok_url)
+        time.sleep(RETRY_INTERVAL)  
 
 
 def wait_for_flask(timeout=5):

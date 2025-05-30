@@ -1,7 +1,9 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(Path(__file__).with_name(".env"), override=True)
+
 
 def get_env_var(name):
     val = os.getenv(name)
@@ -20,6 +22,7 @@ NGROK_AUTH_TOKEN = get_env_var("NGROK_AUTH_TOKEN")
 
 SECRETS_DICT = {
     'ID_NUMBER': ID_NUMBER,
-    'PIN': PIN
+    'PIN': PIN,
+    'FORWARDING_NUMBER': FORWARDING_NUMBER
 }
 
